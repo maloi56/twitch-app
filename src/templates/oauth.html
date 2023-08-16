@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.2/jquery.min.js" integrity="sha512-tWHlutFnuG0C6nQRlpvrEhE4QpkG1nn2MOUMWmUeRePl4e3Aki0VB6W1v3oLjFtd0hVOtRQ9PHpSfN6u6/QXkQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+<script>
+const body = {
+    "client_id": "UYefFtcjiVs44x267q1OY0UMHwPYaY9IyKGNI1ZG",
+    "client_secret": "EAHyBnTAmk7edBj0lfEPEnzOO4UWJbL4RFjcwD22qjUe2tS9sSNPfrBzwFrCYpz4Ziv6WQPS9kL3aRb0YYKheIdh8Acjtd7PUFDh9nvO9a0n4F5yNJBqCO02OwLwOapc",
+    "grant_type": "convert_token",
+    "backend":"twitch",
+    "token":"zt9epy8nhb2flbyrcywc940107qc67"
+};
+$.post({
+  url: "http://localhost:8000/auth/convert-token/",
+  data: JSON.stringify(body),
+  contentType: "application/json", // Вот здесь указываем тип контента
+  success: (data, status) => {
+    console.log(data);
+  }
+});
+</script>
+</body>
+</html>
