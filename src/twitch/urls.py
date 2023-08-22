@@ -18,12 +18,13 @@ from django.contrib import admin
 from django.urls import path, re_path, include
 from rest_framework import routers
 
-from users.views import LeaderBoardModalViewSet, oauth, TurnOnBot
+from users.views import LeaderBoardModalViewSet, oauth, TurnOnBot, test
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('oauth/', oauth),
     path('turn_on_bot/', TurnOnBot.as_view()),
+    path('test/', test),
     re_path(r'^auth/', include('drf_social_oauth2.urls', namespace='drf')),
 
 ]

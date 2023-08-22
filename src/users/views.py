@@ -37,3 +37,6 @@ class TurnOnBot(APIView):
 
 def oauth(request):
     return render(request, 'oauth.html')
+
+def test(request):
+    return render(request, 'test.html')

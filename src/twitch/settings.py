@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,6 +42,7 @@ INSTALLED_APPS = [
     'oauth2_provider',
     'social_django',
     'drf_social_oauth2',
+    "channels",
 
     'users',
 ]
@@ -85,7 +87,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'twitch-app',
-        'USER': 'postgres',
+        'USER': 'tucha',
         'PASSWORD': 'MASTERKEY',
         'HOST': 'localhost',
         'PORT': 5432
@@ -161,3 +163,7 @@ REST_FRAMEWORK = {
         'drf_social_oauth2.authentication.SocialAuthentication',
     ),
 }
+
+#ASGI 
+
+ASGI_APPLICATION = "twitch.asgi.application"
