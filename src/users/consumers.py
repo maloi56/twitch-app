@@ -29,6 +29,7 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
         if self.bot is None:
             self.bot = Bot(token=self.token, initial_channels=[self.channel], send_message=self.send_message)
             asyncio.create_task(self.bot.start())
+            await self.send(text_data='Successful connect to chat bot, Danya')
         print(f'channel: {self.channel}, token: {self.token} is running now')
 
     @action()

@@ -212,6 +212,8 @@ ASGI_APPLICATION = "twitch.asgi.application"
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
+CORS_ALLOW_ALL_ORIGINS=True
+SECURE_CROSS_ORIGIN_OPENER_POLICY=None
 
 # Redis
 REDIS_HOST = env('REDIS_HOST')
