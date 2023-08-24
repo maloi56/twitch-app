@@ -1,9 +1,3 @@
-import os
-import django
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-django.setup()
-
 from django.utils.timezone import now
 from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
