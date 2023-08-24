@@ -10,21 +10,47 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import environ
 from pathlib import Path
+
+env = environ.Env(
+    DEBUG=(bool),
+    SECRET_KEY=(str),
+    DOMAIN_NAME=(str),
+
+    REDIS_PORT=(str),
+    REDIS_HOST=(str),
+
+    POSTGRES_USER=(str),
+    POSTGRES_PASSWORD=(str),
+    POSTGRES_HOST=(str),
+    POSTGRES_PORT=(str),
+
+    DB_HOST=(str),
+    DB_NAME=(str),
+    DB_USER=(str),
+    DB_PASS=(str),
+
+    SOCIAL_AUTH_TWITCH_KEY=(str),
+    SOCIAL_AUTH_TWITCH_SECRET=(str),
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+environ.Env.read_env(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-xtgk*=$s1^0f-da_*-_q0edw-xs!f0wl1--v8eht3=@loc$vo)'
+SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+DOMAIN_NAME = env('DOMAIN_NAME')
 
 # Application definition
 
@@ -42,7 +68,8 @@ INSTALLED_APPS = [
     'oauth2_provider',
     'social_django',
     'drf_social_oauth2',
-    "channels",
+    'channels',
+    'corsheaders',
 
     'users',
 ]
@@ -55,6 +82,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'twitch.urls'
@@ -86,11 +115,11 @@ WSGI_APPLICATION = 'twitch.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'twitch-app',
-        'USER': 'tucha',
-        'PASSWORD': 'MASTERKEY',
-        'HOST': 'localhost',
-        'PORT': 5432
+        'NAME': env('DB_NAME'),
+        'USER': env('POSTGRES_USER'),
+        'PASSWORD': env('POSTGRES_PASSWORD'),
+        'HOST': env('POSTGRES_HOST'),
+        'PORT': env('POSTGRES_PORT')
     }
 }
 
@@ -126,7 +155,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+if DEBUG:
+    STATICFILES_DIRS = (
+        BASE_DIR / 'static',
+    )
+else:
+    STATIC_ROOT = BASE_DIR / 'static'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -140,8 +178,8 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-SOCIAL_AUTH_TWITCH_KEY = 'moecjq6prgukdbnue75lekvx090fpl'
-SOCIAL_AUTH_TWITCH_SECRET = 'urkgzxnszl2fk4js4851u7k4cixg5t'
+SOCIAL_AUTH_TWITCH_KEY = env('SOCIAL_AUTH_TWITCH_KEY')
+SOCIAL_AUTH_TWITCH_SECRET = env('SOCIAL_AUTH_TWITCH_SECRET')
 
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 # DRFSO2_PROPRIETARY_BACKEND_NAME = 'twitch'
@@ -167,3 +205,14 @@ REST_FRAMEWORK = {
 #ASGI 
 
 ASGI_APPLICATION = "twitch.asgi.application"
+
+
+# CORS
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]
+
+# Redis
+REDIS_HOST = env('REDIS_HOST')
+REDIS_PORT = env('REDIS_PORT')

@@ -14,71 +14,20 @@
 <button id="delete">Delete</button>
 
 <pre id="response"></pre>
-
+<script
+    src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+    crossorigin="anonymous"></script>
 <script>
-    const ws = new WebSocket("ws://localhost:8000/ws/twitch/?token=" + 'OH2ktKkgz04ICQm9YykIXjqGnYFMyL')
-
-    ws.onmessage = function (e) {
-        document.getElementById("response").textContent = JSON.stringify(JSON.parse(e.data), undefined, 2);
-        console.log(e.data)
-    }
-
-    document.querySelector('#list').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "list",
-            request_id: new Date().getTime()
-        }))
+    const ws = new WebSocket("ws://localhost:8000/ws/twitch/?token=" + 'lUJi703yQ8ucZzPoULTm2unIxupXou')
+    ws.onopen = function () {
+        ws.send(
+            JSON.stringify({
+                action: "join_room",
+                request_id: new Date().getTime(),
+            })
+        );
     };
-
-    document.querySelector('#retrieve').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "retrieve",
-            request_id: new Date().getTime(),
-            pk: 3
-        }))
-    }
-
-    document.querySelector('#create').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "create",
-            request_id: new Date().getTime(),
-            data: {
-                username: "Test",
-                password: "testpsdsassword123",
-                email: "4qqqq@example.com"
-            }
-        }))
-    }
-
-    document.querySelector('#patch').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "patch",
-            request_id: new Date().getTime(),
-            pk: 2,
-            data: {
-                email: "edited@example.com"
-            }
-        }))
-    }
-
-    document.querySelector('#update').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "update",
-            request_id: new Date().getTime(),
-            pk: 3,
-            data: {
-                username: "WWWWWWWW"
-            }
-        }))
-    }
-
-    document.querySelector('#delete').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "delete",
-            request_id: new Date().getTime(),
-            pk: 2
-        }))
-    }
 </script>
 </body>
 </html>

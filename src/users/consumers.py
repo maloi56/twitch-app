@@ -1,31 +1,40 @@
 import asyncio
+import json
+
+from channels.db import database_sync_to_async
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
-from djangochannelsrestframework import mixins
 from djangochannelsrestframework.observer.generics import (ObserverModelInstanceMixin, action)
-from djangochannelsrestframework.observer import model_observer
-from twitchio.ext import commands
+from django.contrib.auth.models import AnonymousUser
+from social_django.models import UserSocialAuth
 
 from twitch_bot.main import Bot
 
+
 class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
-    token = 'a3ov4s7rurf8pivs9hd3h00zjz8qks' # accest token from twitch
-    channel = 'malooooi'
     bot = None
+    token = None
+    channel = None
 
-    async def connect(self):
-        await self.accept()
+    async def disconnect(self, code):
+        if self.bot is not None:
+            await self.bot.close()
+        return super().disconnect(code)
+
+    @action()
+    async def join_room(self, **kwargs):
+        if isinstance(self.scope['user'], AnonymousUser):
+            return await self.send(text_data='Access token is not valid. Connection has closed', close=True)
+        self.channel = self.scope['user'].username
+        self.token = await self.get_access_token(self.channel)
         if self.bot is None:
-            self.bot = Bot(token=self.token, initial_channels=[self.channel])
+            self.bot = Bot(token=self.token, initial_channels=[self.channel], send_message=self.send_message)
             asyncio.create_task(self.bot.start())
+        print(f'channel: {self.channel}, token: {self.token} is running now')
 
-    async def disconnect(self, close_code):
-        # Здесь закройте соединение с Twitchio и освободите ресурсы
-        bot = Bot(token=self.token, initial_channels=[self.channel])
-        bot.close()
-    async def receive(self, text_data):
-        # Обработка входящих сообщений от клиента WebSocket
-        pass
+    @action()
+    async def send_message(self, message, **kwargs):
+        await self.send_json(content=json.dumps({'name': message.channel.name, 'message': message.content}))
 
-    async def twitch_event_handler(self, event):
-        # Обработка событий от Twitchio бота
-        pass
+    @database_sync_to_async
+    def get_access_token(self, channel):
+        return json.loads(UserSocialAuth.objects.filter(user__username=channel).last().extra_data).get('access_token')

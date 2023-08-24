@@ -21,6 +21,8 @@ ALGORITHM = "HS256"
 def get_user(token):
     try:
         payload = AccessToken.objects.filter(token=token).last()
+        if payload is None:
+            return AnonymousUser()
         print('payload', payload)
     except:
         print('no payload')
