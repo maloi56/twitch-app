@@ -6,7 +6,7 @@ from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import (ObserverModelInstanceMixin, action)
 from django.contrib.auth.models import AnonymousUser
 from social_django.models import UserSocialAuth
-
+from users.models import BotSettings, Leaderboard, LeaderboardMembers
 from twitch_bot.main import Bot
 
 
@@ -14,6 +14,8 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
     bot = None
     token = None
     channel = None
+    settings = None
+    leaderboard = None
 
     async def disconnect(self, code):
         if self.bot is not None:
@@ -23,19 +25,34 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
     @action()
     async def join_room(self, **kwargs):
         if isinstance(self.scope['user'], AnonymousUser):
-            return await self.send_json(content={'message':'Access token is not valid. Connection has closed'}, close=True)
-        self.channel = self.scope['user'].username
-        self.token = await self.get_access_token(self.channel)
+            return await self.send_json(content={'message': 'Access token is not valid. Connection has closed'},
+                                        close=True)
+        await self.init_data()
         if self.bot is None:
-            self.bot = Bot(token=self.token, initial_channels=[self.channel], send_message=self.send_message)
+            self.bot = Bot(token=self.token,
+                           initial_channels=[self.channel],
+                           prefix=self.settings.prefix,
+                           send_message=self.send_message)
             asyncio.create_task(self.bot.start())
-            await self.send_json(content={'message':'Successful connect to chat bot, Danya'})
+            await self.send_json(content={'message': 'Successful connect to chat bot, Danya'})
         print(f'channel: {self.channel}, token: {self.token} is running now')
 
     @action()
     async def send_message(self, message, **kwargs):
         await self.send_json(content={'name': message.tags['display-name'], 'message': message.content})
+        await self.leaderboard_action(message)
 
     @database_sync_to_async
-    def get_access_token(self, channel):
-        return json.loads(UserSocialAuth.objects.filter(user__username=channel).last().extra_data).get('access_token')
+    def init_data(self):
+        user = self.scope['user']
+        self.channel = user.username
+        self.token = json.loads(UserSocialAuth.objects.filter(user__username=self.channel)
+                                .last().extra_data).get('access_token')
+        self.settings = BotSettings.objects.get(user=user)
+        self.leaderboard = Leaderboard.objects.get(channel=user)
+
+    @database_sync_to_async
+    def leaderboard_action(self, message):
+        instance, created = LeaderboardMembers.objects.get_or_create(leaderboard=self.leaderboard,
+                                                                     nickname=message.tags['display-name'])
+        instance.add_exp(15)

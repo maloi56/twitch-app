@@ -3,8 +3,8 @@ from twitchio.ext import commands
 
 class Bot(commands.Bot):
 
-    def __init__(self, token, initial_channels, send_message):
-        super().__init__(token=token, prefix='?', initial_channels=initial_channels)
+    def __init__(self, token, initial_channels, send_message, prefix):
+        super().__init__(token=token, prefix=prefix, initial_channels=initial_channels)
         self.send_message = send_message
 
     async def event_ready(self):

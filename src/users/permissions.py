@@ -1,9 +1,11 @@
 from rest_framework.permissions import BasePermission
+from users.models import Leaderboard
 
 
 class IsOwner(BasePermission):
     def has_object_permission(self, request, view, obj):
-        print(obj)
+        if isinstance(obj, Leaderboard):
+            return obj.channel == request.user
         return obj.user == request.user
 
     def has_permission(self, request, view):

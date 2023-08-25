@@ -8,31 +8,41 @@ from django.dispatch import receiver
 # from allauth.socialaccount.models import SocialAccount
 
 
-class UserInfo(models.Model):
-    user = models.OneToOneField(User, verbose_name='Канал', on_delete=models.CASCADE)
-    voice_status = models.BooleanField(verbose_name='Озвучка чата', default=False)
+class BotSettings(models.Model):
+    ALL = 1
+    OFF = 2
+    WITH_PREFIX = 3
+    VOICE_CHOICES = (
+        (ALL, 'Все'),
+        (OFF, 'Отключено'),
+        (WITH_PREFIX, 'С приставкой')
+    )
+
+    user = models.OneToOneField(User, verbose_name='Канал', on_delete=models.CASCADE, related_name='settings')
+    voice_status = models.IntegerField(verbose_name='Озвучка чата', choices=VOICE_CHOICES, default=ALL)
+    prefix = models.CharField(verbose_name='Приставка', max_length=1, default='!')
 
     class Meta:
-        verbose_name = "Параметры приложения"
-        verbose_name_plural = "Параметры приложения"
+        verbose_name = "Параметры бота"
+        verbose_name_plural = "Параметры бота"
 
     def __str__(self):
         return f'Канал {self.user}'
 
-#
-# @receiver(post_save, sender=SocialAccount)
-# def update_userinfo(sender, instance, **kwargs):
-#     user = instance.user
-#     if not UserInfo.objects.filter(user=user).exists():
-#         UserInfo.objects.create(user=user)
+
+@receiver(post_save, sender=User)
+def update_userinfo(sender, instance, **kwargs):
+    user = instance
+    if not BotSettings.objects.filter(user=user).exists() and not Leaderboard.objects.filter(channel=user).exists():
+        BotSettings.objects.create(user=user)
+        Leaderboard.objects.create(channel=user)
 
 
 class Leaderboard(models.Model):
     channel = models.ForeignKey(to=User, verbose_name='Канал', on_delete=models.CASCADE)
-    created = models.DateTimeField(verbose_name='Дата создания', auto_created=True)
 
     def __str__(self):
-        return f'Лидерборд, созданный {self.created} на канале {self.channel}'
+        return f'Лидерборд на канале {self.channel}'
 
     class Meta:
         verbose_name = "Лидерборд"
@@ -41,7 +51,7 @@ class Leaderboard(models.Model):
 
 class LeaderboardMembers(models.Model):
     DEFAULT_EXP_PER_LVL = 125
-    DEFAULT_K = 0.125
+    DEFAULT_K = 1.125
 
     leaderboard = models.ForeignKey(to=Leaderboard, on_delete=models.CASCADE, related_name='leaderboard_members')
     nickname = models.CharField(verbose_name='Никнейм', max_length=255)
@@ -54,12 +64,12 @@ class LeaderboardMembers(models.Model):
 
     @classmethod
     def __get_level_boarder(cls, level):
-        return level * cls.DEFAULT_EXP_PER_LVL * cls.DEFAULT_K
+        return round(level * cls.DEFAULT_EXP_PER_LVL * cls.DEFAULT_K)
 
     def add_exp(self, value):
         current_exp = self.experience + value
-        while current_exp > LeaderboardMembers.__get_level_boarder(self.level):
-            current_exp = current_exp - LeaderboardMembers.__get_level_boarder(self.level)
+        while current_exp >= LeaderboardMembers.__get_level_boarder(self.level):
+            current_exp = round(current_exp - LeaderboardMembers.__get_level_boarder(self.level))
             self.level += 1
         self.experience = current_exp
         self.save()
