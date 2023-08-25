@@ -34,7 +34,7 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
 
     @action()
     async def send_message(self, message, **kwargs):
-        await self.send_json(content={'name': message.channel.name, 'message': message.content})
+        await self.send_json(content={'name': message.tags['display-name'], 'message': message.content})
 
     @database_sync_to_async
     def get_access_token(self, channel):
