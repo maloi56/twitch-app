@@ -23,18 +23,18 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
     @action()
     async def join_room(self, **kwargs):
         if isinstance(self.scope['user'], AnonymousUser):
-            return await self.send(text_data='Access token is not valid. Connection has closed', close=True)
+            return await self.send_json(content={'message':'Access token is not valid. Connection has closed'}, close=True)
         self.channel = self.scope['user'].username
         self.token = await self.get_access_token(self.channel)
         if self.bot is None:
             self.bot = Bot(token=self.token, initial_channels=[self.channel], send_message=self.send_message)
             asyncio.create_task(self.bot.start())
-            await self.send(text_data='Successful connect to chat bot, Danya')
+            await self.send_json(content={'message':'Successful connect to chat bot, Danya'})
         print(f'channel: {self.channel}, token: {self.token} is running now')
 
     @action()
     async def send_message(self, message, **kwargs):
-        await self.send_json(content=json.dumps({'name': message.channel.name, 'message': message.content}))
+        await self.send_json(content={'name': message.channel.name, 'message': message.content})
 
     @database_sync_to_async
     def get_access_token(self, channel):
