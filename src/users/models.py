@@ -5,6 +5,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+
 # from allauth.socialaccount.models import SocialAccount
 
 
@@ -18,9 +19,37 @@ class BotSettings(models.Model):
         (WITH_PREFIX, 'С приставкой')
     )
 
+    RU = 'ru'
+    ENG = 'eng'
+    FR = 'fr'
+    DE = 'de'
+    LANG_CHOICES = ((RU, 'Русский'),
+                    (ENG, 'Английский'),
+                    (FR, 'Французский'),
+                    (DE, 'Немецкий'),)
+
     user = models.OneToOneField(User, verbose_name='Канал', on_delete=models.CASCADE, related_name='settings')
     voice_status = models.IntegerField(verbose_name='Озвучка чата', choices=VOICE_CHOICES, default=ALL)
-    prefix = models.CharField(verbose_name='Приставка', max_length=1, default='!')
+    command = models.CharField(verbose_name='Команда', max_length=36, default='say')
+    language = models.CharField(verbose_name='Язык озвучивания', choices=LANG_CHOICES, default=RU)
+    volume = models.DecimalField(verbose_name='Громкость',
+                                 default=0.1,
+                                 max_digits=2,
+                                 decimal_places=1,
+                                 validators=[MinValueValidator(0), MaxValueValidator(1)],
+                                 help_text='Настройка громкости')
+    rate = models.DecimalField(verbose_name='Частота',
+                               default=0.1,
+                               max_digits=2,
+                               decimal_places=1,
+                               validators=[MinValueValidator(0), MaxValueValidator(1)],
+                               help_text='Настройка частоты')
+    pitch = models.DecimalField(verbose_name='Подача',
+                                default=0.1,
+                                max_digits=2,
+                                decimal_places=1,
+                                validators=[MinValueValidator(0), MaxValueValidator(1)],
+                                help_text='Настройка подачи')
 
     class Meta:
         verbose_name = "Параметры бота"

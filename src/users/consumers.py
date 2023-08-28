@@ -31,15 +31,19 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
         if self.bot is None:
             self.bot = Bot(token=self.token,
                            initial_channels=[self.channel],
-                           prefix=self.settings.prefix,
-                           send_message=self.send_message)
+                           send_message=self.send_message, )
+
             asyncio.create_task(self.bot.start())
             await self.send_json(content={'message': 'Successful connect to chat bot, Danya'})
         print(f'channel: {self.channel}, token: {self.token} is running now')
 
     @action()
     async def send_message(self, message, **kwargs):
-        await self.send_json(content={'name': message.tags['display-name'], 'message': message.content})
+        if self.settings.voice_status == BotSettings.ALL or \
+                self.settings.voice_status == BotSettings.WITH_PREFIX and \
+                message.content.split()[0] == '!' + self.settings.command:
+            await self.send_json(content={'name': message.tags['display-name'],
+                                          'message': message.content.removeprefix('!' + self.settings.command).strip()})
         await self.leaderboard_action(message)
 
     @database_sync_to_async
