@@ -2,6 +2,7 @@ import asyncio
 import json
 
 from channels.db import database_sync_to_async
+from django.core.cache import cache
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import (ObserverModelInstanceMixin, action)
 from django.contrib.auth.models import AnonymousUser
@@ -42,16 +43,17 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
         if self.settings.voice_status == BotSettings.ALL or \
                 self.settings.voice_status == BotSettings.WITH_PREFIX and \
                 message.content.split()[0] == '!' + self.settings.command:
-            await self.send_json(content={'name': message.tags['display-name'],
-                                          'message': message.content.removeprefix('!' + self.settings.command).strip()})
+            if await self.access_delay(self.channel, message.tags['display-name'], self.settings.delay):
+                await self.send_json(content={'name': message.tags['display-name'],
+                                              'message': message.content.removeprefix('!' + self.settings.command).strip()})
         await self.leaderboard_action(message)
 
     @database_sync_to_async
     def init_data(self):
         user = self.scope['user']
         self.channel = user.username
-        self.token = json.loads(UserSocialAuth.objects.filter(user__username=self.channel)
-                                .last().extra_data).get('access_token')
+        self.token = json.loads(UserSocialAuth.objects.filter(user__username=self.channel).last().extra_data).get(
+            'access_token')
         self.settings = BotSettings.objects.get(user=user)
         self.leaderboard = Leaderboard.objects.get(channel=user)
 
@@ -60,3 +62,12 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
         instance, created = LeaderboardMembers.objects.get_or_create(leaderboard=self.leaderboard,
                                                                      nickname=message.tags['display-name'])
         instance.add_exp(15)
+
+    @staticmethod
+    async def access_delay(channel, nickname, delay):
+        key = f'{channel}_{nickname}'
+        if cache.get(key):
+            return False
+        else:
+            cache.set(key, True, delay)
+            return True

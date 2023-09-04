@@ -234,3 +234,15 @@ REDIS_PORT = env('REDIS_PORT')
 #         "BACKEND": "channels.layers.InMemoryChannelLayer"
 #     }
 # }
+
+# кэш
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': f'redis://{REDIS_HOST}:{REDIS_PORT}/1',  # Укажите свой URL для Redis.
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}

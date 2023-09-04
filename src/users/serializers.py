@@ -8,7 +8,8 @@ from users.models import Leaderboard, User, BotSettings, LeaderboardMembers
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username',)
+        fields = ["username"]
+        extra_kwargs = {'password': {'write_only': True}}
 
 
 class LeaderboardMembersSerializer(serializers.ModelSerializer):
@@ -30,21 +31,13 @@ class LeaderboardSerializer(serializers.ModelSerializer):
 
 
 class BotSettingsSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+    user = UserSerializer(read_only=True)
     voice_status = serializers.ChoiceField(choices=BotSettings.VOICE_CHOICES, label='Выбор статуса', default=1)
 
     class Meta:
         model = BotSettings
         exclude = ['id']
         depth = 1
-        read_only_fields = ['user']
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "username", "email", "password"]
-        extra_kwargs = {'password': {'write_only': True}}
 
 
 class UserSocialAuthSerializer(serializers.ModelSerializer):

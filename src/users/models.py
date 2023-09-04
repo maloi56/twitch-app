@@ -42,14 +42,18 @@ class BotSettings(models.Model):
                                default=0.1,
                                max_digits=2,
                                decimal_places=1,
-                               validators=[MinValueValidator(0), MaxValueValidator(1)],
+                               validators=[MinValueValidator(0), MaxValueValidator(2)],
                                help_text='Настройка частоты')
     pitch = models.DecimalField(verbose_name='Подача',
                                 default=0.1,
                                 max_digits=2,
                                 decimal_places=1,
-                                validators=[MinValueValidator(0), MaxValueValidator(1)],
+                                validators=[MinValueValidator(0), MaxValueValidator(2)],
                                 help_text='Настройка подачи')
+    delay = models.IntegerField(verbose_name='Задержка',
+                                default=5,
+                                validators=[MinValueValidator(0)],
+                                help_text='Настройка задержки озвучивания сообщений в секундах')
 
     class Meta:
         verbose_name = "Параметры бота"
