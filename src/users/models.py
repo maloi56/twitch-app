@@ -32,24 +32,28 @@ class BotSettings(models.Model):
     voice_status = models.IntegerField(verbose_name='Озвучка чата', choices=VOICE_CHOICES, default=ALL)
     command = models.CharField(verbose_name='Команда', max_length=36, default='say')
     language = models.CharField(verbose_name='Язык озвучивания', choices=LANG_CHOICES, default=RU)
+
     volume = models.DecimalField(verbose_name='Громкость',
-                                 default=0.1,
+                                 default=0.5,
                                  max_digits=2,
                                  decimal_places=1,
                                  validators=[MinValueValidator(0), MaxValueValidator(1)],
                                  help_text='Настройка громкости')
+
     rate = models.DecimalField(verbose_name='Частота',
-                               default=0.1,
+                               default=1.0,
                                max_digits=2,
                                decimal_places=1,
                                validators=[MinValueValidator(0), MaxValueValidator(2)],
                                help_text='Настройка частоты')
+
     pitch = models.DecimalField(verbose_name='Подача',
-                                default=0.1,
+                                default=1.0,
                                 max_digits=2,
                                 decimal_places=1,
                                 validators=[MinValueValidator(0), MaxValueValidator(2)],
                                 help_text='Настройка подачи')
+
     delay = models.IntegerField(verbose_name='Задержка',
                                 default=5,
                                 validators=[MinValueValidator(0)],
