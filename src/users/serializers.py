@@ -1,5 +1,6 @@
 import json
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
 
 from social_django.models import UserSocialAuth
 from users.models import Leaderboard, User, BotSettings, LeaderboardMembers
@@ -21,13 +22,18 @@ class LeaderboardMembersSerializer(serializers.ModelSerializer):
 
 class LeaderboardSerializer(serializers.ModelSerializer):
     channel = UserSerializer()
-    leaderboard_members = LeaderboardMembersSerializer(many=True, read_only=True)
+    leaderboard_members = SerializerMethodField(read_only=True)
 
     class Meta:
         model = Leaderboard
         exclude = ['id']
         read_only_fields = ['channel']
         depth = 1
+
+    def get_leaderboard_members(self, obj):
+        sorted_members = obj.leaderboard_members.all().order_by('-level', '-experience')
+        serializer = LeaderboardMembersSerializer(sorted_members, many=True)
+        return serializer.data
 
 
 class BotSettingsSerializer(serializers.ModelSerializer):
