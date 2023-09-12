@@ -57,7 +57,7 @@ class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
     async def run_schedule(self):
         while True:
             await self.send_message()
-            await asyncio.sleep(5)
+            await asyncio.sleep(15)
 
     @database_sync_to_async
     def get_leaderboard(self, secret):

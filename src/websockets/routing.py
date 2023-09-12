@@ -1,6 +1,7 @@
 from django.urls import path
 
-from websockets import RoomConsumer, Widget
+from websockets.chat.consumers import RoomConsumer
+from websockets.widget.consumers import Widget
 
 
 websocket_urlpatterns = [
