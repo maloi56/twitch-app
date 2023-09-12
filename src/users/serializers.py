@@ -26,7 +26,7 @@ class LeaderboardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Leaderboard
-        exclude = ['id']
+        exclude = ['id', 'secret']
         read_only_fields = ['channel']
         depth = 1
 
@@ -34,6 +34,12 @@ class LeaderboardSerializer(serializers.ModelSerializer):
         sorted_members = obj.leaderboard_members.all().order_by('-level', '-experience')
         serializer = LeaderboardMembersSerializer(sorted_members, many=True)
         return serializer.data
+
+
+class LeaderboardSecretSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Leaderboard
+        fields = ['secret']
 
 
 class BotSettingsSerializer(serializers.ModelSerializer):

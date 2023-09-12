@@ -10,10 +10,10 @@ https://docs.djangoproject.com/en/4.2/howto/deployment/asgi/
 import os
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
-from users.middleware import JwtAuthMiddlewareStack
+from websockets.middleware import JwtAuthMiddlewareStack
 # from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 
-from users import routing
+from websockets import routing
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'twitch.settings')
 

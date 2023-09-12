@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, re_path, include
 from rest_framework import routers
 
-from users.views import LeaderBoardModalViewSet, oauth, BotSettingsViewSet, test
+from users.views import LeaderBoardModalViewSet, oauth, BotSettingsViewSet, test, LeaderboardSecret
 from .yasg import urlpatterns as doc_urls
 
 
@@ -32,6 +32,7 @@ urlpatterns = [
 
 router = routers.DefaultRouter()
 router.register(r'api/leaderboard', LeaderBoardModalViewSet)
+router.register(r'api/leaderboard/secret', LeaderboardSecret, basename='leaderboard-secret')
 router.register(r'api/settings', BotSettingsViewSet)
 
 urlpatterns += router.urls

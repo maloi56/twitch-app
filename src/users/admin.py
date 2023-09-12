@@ -19,4 +19,5 @@ class LeaderboardMembersInline(admin.StackedInline):
 @admin.register(Leaderboard)
 class LeaderboardAdmin(admin.ModelAdmin):
     list_display = ('id', 'channel',)
+    fields = ('secret',)
     inlines = (LeaderboardMembersInline,)

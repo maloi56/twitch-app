@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -77,9 +79,15 @@ def update_userinfo(sender, instance, **kwargs):
 
 class Leaderboard(models.Model):
     channel = models.ForeignKey(to=User, verbose_name='Канал', on_delete=models.CASCADE)
+    secret = models.UUIDField(unique=True, null=True, blank=True)
+
+    def update_secret(self):
+        self.secret = uuid.uuid4()
+        self.save()
+        return self.secret
 
     def __str__(self):
-        return f'Лидерборд на канале {self.channel}'
+        return f'Лидерборд на канале {self.channel.username}'
 
     class Meta:
         verbose_name = "Лидерборд"

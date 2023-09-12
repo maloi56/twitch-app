@@ -7,7 +7,7 @@ from django.utils.timezone import now
 
 from users.models import User, Leaderboard, BotSettings, LeaderboardMembers
 from oauth2_provider.models import AccessToken
-from users.serializers import LeaderboardSerializer, BotSettingsSerializer
+from users.serializers import LeaderboardSerializer, BotSettingsSerializer, LeaderboardSecretSerializer
 
 
 class UsersApiTestCase(APITestCase):
@@ -30,6 +30,26 @@ class UsersApiTestCase(APITestCase):
         response = self.client.get(url, headers=self.headers)
         serializer_leaderboard = LeaderboardSerializer(leaderboard).data
         self.assertEquals(response.data, serializer_leaderboard)
+
+        # check permissions
+        url = reverse_lazy('leaderboard-detail', args=(self.temp_user.username,))
+        response = self.client.get(url, headers=self.headers)
+        self.assertEqual(response.status_code, HTTPStatus.FORBIDDEN)
+
+    def test_leaderboard_secret(self):
+        # get leaderboard_secret
+        url = reverse_lazy('leaderboard-secret-detail', args=(self.user.username,))
+        response = self.client.get(url, headers=self.headers)
+
+        leaderboard = Leaderboard.objects.get(channel=self.user)
+        serializer_secret = LeaderboardSecretSerializer(leaderboard).data
+        self.assertEquals(response.data, serializer_secret)
+
+        # change secret
+        query_param = '?new=1'
+        url = reverse_lazy('leaderboard-secret-detail', args=(self.user.username,)) + query_param
+        response = self.client.get(url, headers=self.headers)
+        self.assertNotEquals(response.data, serializer_secret)
 
         # check permissions
         url = reverse_lazy('leaderboard-detail', args=(self.temp_user.username,))

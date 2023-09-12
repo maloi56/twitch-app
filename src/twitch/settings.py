@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'drf_social_oauth2',
     'channels',
     'corsheaders',
+    'django_celery_beat',
 
     'users',
 ]
@@ -216,9 +217,17 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_ALL_ORIGINS=True
 SECURE_CROSS_ORIGIN_OPENER_POLICY=None
 
+# CSRF
+
+CSRF_TRUSTED_ORIGINS = ['https://tucha-tender.ru', 'http://127.0.0.1', 'http://localhost:8000']
+
 # Redis
 REDIS_HOST = env('REDIS_HOST')
 REDIS_PORT = env('REDIS_PORT')
+
+# Celery
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}'
 
 # CHANNEL_LAYERS = {
 #     "default": {
@@ -246,3 +255,24 @@ CACHES = {
         }
     }
 }
+
+# logging
+
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': 'sql.log',
+#         },
+#     },
+#     'loggers': {
+#         'django.db.backends': {
+#             'handlers': ['file'],
+#             'level': 'DEBUG',
+#             'propagate': True,
+#         },
+#     },
+# }
