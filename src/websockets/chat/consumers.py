@@ -19,7 +19,7 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
     leaderboard = None
 
     async def disconnect(self, code):
-        if self.bot is not None:
+        if self.bot:
             await self.bot.close()
         return super().disconnect(code)
 
@@ -51,16 +51,19 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
     def init_data(self):
         user = self.scope['user']
         self.channel = user.username
-        self.token = json.loads(UserSocialAuth.objects.filter(user__username=self.channel).last().extra_data).get(
-            'access_token')
+        self.token = json.loads(UserSocialAuth.objects.filter(user__username=self.channel).last().extra_data). \
+            get('access_token')
+
         self.settings = BotSettings.objects.get(user=user)
         self.leaderboard = Leaderboard.objects.get(channel=user)
 
     @database_sync_to_async
     def leaderboard_action(self, message):
-        instance, created = LeaderboardMembers.objects.get_or_create(leaderboard=self.leaderboard,
-                                                                     nickname=message.tags['display-name'])
-        instance.add_exp(15)
+        nickname = message.tags['display-name']
+        if nickname != self.channel:
+            instance, created = LeaderboardMembers.objects.get_or_create(leaderboard=self.leaderboard,
+                                                                         nickname=nickname)
+            instance.add_points(self.leaderboard.points_per_msg)
 
     async def validate_user(self):
         return False if isinstance(self.scope['user'], AnonymousUser) else True

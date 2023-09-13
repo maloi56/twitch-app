@@ -9,4 +9,7 @@ class IsOwner(BasePermission):
         return obj.user == request.user
 
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated)
+        username = request.user.username
+        return request.query_params.get('channel', None) == username or \
+            view.kwargs.get('channel__username', None) == username or \
+            view.kwargs.get('user__username', None) == username

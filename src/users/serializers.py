@@ -17,23 +17,17 @@ class LeaderboardMembersSerializer(serializers.ModelSerializer):
     class Meta:
         model = LeaderboardMembers
         exclude = ('id', 'leaderboard',)
-        read_only_fields = ('level', 'experience',)
+        read_only_fields = ('points',)
 
 
 class LeaderboardSerializer(serializers.ModelSerializer):
     channel = UserSerializer()
-    leaderboard_members = SerializerMethodField(read_only=True)
 
     class Meta:
         model = Leaderboard
         exclude = ['id', 'secret']
         read_only_fields = ['channel']
         depth = 1
-
-    def get_leaderboard_members(self, obj):
-        sorted_members = obj.leaderboard_members.all().order_by('-level', '-experience')
-        serializer = LeaderboardMembersSerializer(sorted_members, many=True)
-        return serializer.data
 
 
 class LeaderboardSecretSerializer(serializers.ModelSerializer):

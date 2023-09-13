@@ -15,10 +15,12 @@ class BotSettings(models.Model):
     ALL = 1
     OFF = 2
     WITH_PREFIX = 3
+    WITH_SUB = 4
     VOICE_CHOICES = (
         (ALL, 'Все'),
         (OFF, 'Отключено'),
-        (WITH_PREFIX, 'С приставкой')
+        (WITH_PREFIX, 'С приставкой'),
+        (WITH_SUB, 'С подпиской')
     )
 
     RU = 'ru'
@@ -79,7 +81,17 @@ def update_userinfo(sender, instance, **kwargs):
 
 class Leaderboard(models.Model):
     channel = models.ForeignKey(to=User, verbose_name='Канал', on_delete=models.CASCADE)
-    secret = models.UUIDField(unique=True, null=True, blank=True)
+    points_per_msg = models.PositiveIntegerField(verbose_name='Очки за сообщение', default=10,
+                                                 help_text='Количество очков, которое получает зритель за сообщение')
+
+    widget_count = models.PositiveIntegerField(verbose_name='Количество на виджете', default=5,
+                                               help_text='Количество зрителей, отображаемые на виджете')
+
+    points_name = models.CharField(verbose_name='Название для поинтов', default='points', max_length=32,
+                                   help_text='Альтернативное название для поинтов')
+
+    secret = models.UUIDField(verbose_name='Секретный ключ', unique=True, null=True, blank=True,
+                              help_text='Секретный ключ для WS')
 
     def update_secret(self):
         self.secret = uuid.uuid4()
@@ -95,29 +107,52 @@ class Leaderboard(models.Model):
 
 
 class LeaderboardMembers(models.Model):
-    DEFAULT_EXP_PER_LVL = 125
-    DEFAULT_K = 1.125
-
     leaderboard = models.ForeignKey(to=Leaderboard, on_delete=models.CASCADE, related_name='leaderboard_members')
     nickname = models.CharField(verbose_name='Никнейм', max_length=255)
-    experience = models.IntegerField(verbose_name='Очки опыта',
-                                     default=0,
-                                     validators=[MinValueValidator(0)])
-    level = models.IntegerField(verbose_name='Уровень',
-                                default=1,
-                                validators=[MinValueValidator(1), MaxValueValidator(999)])
+    points = models.PositiveIntegerField(verbose_name='Поинты', default=0)
 
-    @classmethod
-    def __get_level_boarder(cls, level):
-        return round(level * cls.DEFAULT_EXP_PER_LVL * cls.DEFAULT_K)
-
-    def add_exp(self, value):
-        current_exp = self.experience + value
-        while current_exp >= LeaderboardMembers.__get_level_boarder(self.level):
-            current_exp = round(current_exp - LeaderboardMembers.__get_level_boarder(self.level))
-            self.level += 1
-        self.experience = current_exp
+    def add_points(self, value):
+        self.points += value
         self.save()
 
     class Meta:
         unique_together = ('nickname', 'leaderboard',)
+        verbose_name = "Зритель"
+        verbose_name_plural = "Зрители"
+
+    def __str__(self):
+        return f'{self.nickname}'
+
+
+class Subscription(models.Model):
+    DAYS = 1
+    MESSAGES_COUNT = 2
+
+    SUBSCRIPTION_TYPES = (
+        ('days', DAYS),
+        ('messages_count', MESSAGES_COUNT)
+    )
+
+    channel = models.ForeignKey(to=User, verbose_name='Канал', on_delete=models.CASCADE)
+    type = models.CharField(verbose_name='Тип подписки',
+                            choices=SUBSCRIPTION_TYPES,
+                            default=DAYS,
+                            help_text='Выбор типа подписки. Подписка на дни или количество сообщений')
+
+    value = models.PositiveIntegerField(verbose_name='Количество', default=1, help_text='Количество дней/сообщений')
+    price = models.PositiveIntegerField(verbose_name='Цена', default=100, help_text='Цена за подписку')
+    description = models.CharField(verbose_name='Описание', null=True, blank=True, help_text='Описание подписки')
+
+    class Meta:
+        verbose_name = "Подписка"
+        verbose_name_plural = "Подписки"
+
+
+class Product(models.Model):
+    channel = models.ForeignKey(to=User, verbose_name='Канал', on_delete=models.CASCADE)
+    price = models.PositiveIntegerField(verbose_name='Цена', default=100, help_text='Цена за товар/услугу')
+    description = models.CharField(verbose_name='Описание', null=True, blank=True, help_text='Описание товара/услуги')
+
+    class Meta:
+        verbose_name = "Товар"
+        verbose_name_plural = "Товары"

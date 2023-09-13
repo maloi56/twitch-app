@@ -4,17 +4,20 @@ import json
 from channels.db import database_sync_to_async
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import (ObserverModelInstanceMixin, action)
-from users.models import Leaderboard
-from users.serializers import LeaderboardSerializer
+from users.models import Leaderboard, LeaderboardMembers
+from users.serializers import LeaderboardSerializer, LeaderboardMembersSerializer
 
 
 class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
     leaderboard = None
+    leaderboard_settings = None
     secret = None
     schedule = None
+    count = None
 
     async def disconnect(self, code):
-        self.schedule.cancel()
+        if self.schedule:
+            self.schedule.cancel()
         return super().disconnect(code)
 
     @action()
@@ -25,10 +28,9 @@ class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
     async def join_room(self, **kwargs):
         if not await self.validate_leaderboard():
             return await self.send_json(content={'message': 'No such leaderboard'}, close=True)
-        await self.send_json(content={'message': f'Got "ХЗ ПОЧЕму ТУт ОШИбКА" leaderboard'})
+        await self.send_json(content={'message': f'Got leaderboard widget'})
 
         self.schedule = asyncio.create_task(self.run_schedule())
-
 
     @action()
     async def send_message(self, **kwargs):
@@ -61,9 +63,14 @@ class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
 
     @database_sync_to_async
     def get_leaderboard(self, secret):
-        self.leaderboard = Leaderboard.objects.filter(secret=secret).first()
+        if self.leaderboard_settings is None:
+            self.leaderboard_settings = Leaderboard.objects.filter(secret=secret).first()
+
+        self.leaderboard = LeaderboardMembers.objects.filter(leaderboard=self.leaderboard_settings) \
+            .order_by('-points').all()[:self.leaderboard_settings.widget_count]
+
         return self.leaderboard
 
     @database_sync_to_async
     def get_ser_leaderboard(self):
-        return LeaderboardSerializer(self.leaderboard).data
+        return LeaderboardMembersSerializer(self.leaderboard, many=True).data

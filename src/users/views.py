@@ -4,11 +4,33 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from users.permissions import IsOwner
 from rest_framework import generics, mixins
-from users.models import Leaderboard, BotSettings
-from users.serializers import LeaderboardSerializer, BotSettingsSerializer, LeaderboardSecretSerializer
+from rest_framework.pagination import PageNumberPagination
+from users.models import Leaderboard, BotSettings, LeaderboardMembers
+from users.serializers import LeaderboardSerializer, BotSettingsSerializer, LeaderboardSecretSerializer, \
+    LeaderboardMembersSerializer
 
 
-class LeaderBoardModalViewSet(mixins.RetrieveModelMixin, GenericViewSet):
+class CustomPagination(PageNumberPagination):
+    page_size = 10
+    page_query_param = 'page'
+    max_page_size = 1000
+
+
+class LeaderBoardMembersModalViewSet(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = LeaderboardMembersSerializer
+    queryset = LeaderboardMembers.objects.all()
+    permission_classes = (IsOwner,)
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        channel = self.request.query_params.get('channel', None)
+        return queryset.filter(leaderboard__channel__username=channel).order_by('-points').exclude(nickname=channel)
+
+
+class LeaderBoardModalViewSet(mixins.RetrieveModelMixin,
+                              mixins.UpdateModelMixin,
+                              GenericViewSet):
     serializer_class = LeaderboardSerializer
     queryset = Leaderboard.objects.all()
     permission_classes = (IsOwner,)
