@@ -1,5 +1,4 @@
 import asyncio
-import json
 
 from channels.db import database_sync_to_async
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
@@ -13,7 +12,6 @@ class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
     leaderboard_settings = None
     secret = None
     schedule = None
-    count = None
 
     async def disconnect(self, code):
         if self.schedule:
@@ -66,8 +64,12 @@ class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
         if self.leaderboard_settings is None:
             self.leaderboard_settings = Leaderboard.objects.filter(secret=secret).first()
 
-        self.leaderboard = LeaderboardMembers.objects.filter(leaderboard=self.leaderboard_settings) \
-            .order_by('-points').all()[:self.leaderboard_settings.widget_count]
+        self.leaderboard = LeaderboardMembers.objects \
+                               .filter(leaderboard=self.leaderboard_settings) \
+                               .order_by('-points') \
+                               .all() \
+                               .exclude(nickname=self.leaderboard_settings.channel.username) \
+            [:self.leaderboard_settings.widget_count]
 
         return self.leaderboard
 

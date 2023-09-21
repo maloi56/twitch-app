@@ -85,6 +85,7 @@ class Leaderboard(models.Model):
                                                  help_text='Количество очков, которое получает зритель за сообщение')
 
     widget_count = models.PositiveIntegerField(verbose_name='Количество на виджете', default=5,
+                                               validators=[MaxValueValidator(15)],
                                                help_text='Количество зрителей, отображаемые на виджете')
 
     points_name = models.CharField(verbose_name='Название для поинтов', default='points', max_length=32,
@@ -110,10 +111,6 @@ class LeaderboardMembers(models.Model):
     leaderboard = models.ForeignKey(to=Leaderboard, on_delete=models.CASCADE, related_name='leaderboard_members')
     nickname = models.CharField(verbose_name='Никнейм', max_length=255)
     points = models.PositiveIntegerField(verbose_name='Поинты', default=0)
-
-    def add_points(self, value):
-        self.points += value
-        self.save()
 
     class Meta:
         unique_together = ('nickname', 'leaderboard',)

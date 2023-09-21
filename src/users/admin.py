@@ -28,4 +28,4 @@ class LeaderboardMembersAdmin(admin.ModelAdmin):
 class LeaderboardAdmin(admin.ModelAdmin):
     list_display = ('id', 'channel',)
     fields = ('secret', 'points_per_msg', 'widget_count', 'points_name')
-    inlines = (LeaderboardMembersInline,)
+    # inlines = (LeaderboardMembersInline,)

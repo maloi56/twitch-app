@@ -35,6 +35,8 @@ urlpatterns = [
 
 ]
 
+urlpatterns += [path('silk/', include('silk.urls', namespace='silk'))]
+
 router = routers.DefaultRouter()
 router.register(r'api/leaderboard', LeaderBoardMembersModalViewSet)
 router.register(r'api/leaderboard_settings', LeaderBoardModalViewSet)

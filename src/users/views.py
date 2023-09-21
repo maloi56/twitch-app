@@ -1,6 +1,5 @@
+from django.core.cache import cache
 from django.shortcuts import render
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from users.permissions import IsOwner
 from rest_framework import generics, mixins
@@ -36,6 +35,20 @@ class LeaderBoardModalViewSet(mixins.RetrieveModelMixin,
     permission_classes = (IsOwner,)
     lookup_field = 'channel__username'
 
+    def get_object(self):
+        key = f'leaderboard_settings_{self.kwargs[self.lookup_field]}'
+        obj = cache.get(key)
+        if not obj:
+            obj = super().get_object()
+            cache.set(key, obj, None)
+        return obj
+
+    def update(self, request, *args, **kwargs):
+        key = f'leaderboard_settings_{self.kwargs[self.lookup_field]}'
+        response = super().update(request, *args, **kwargs)
+        cache.delete(key)
+        return response
+
 
 class LeaderboardSecret(mixins.RetrieveModelMixin, GenericViewSet):
     serializer_class = LeaderboardSecretSerializer
@@ -57,6 +70,20 @@ class BotSettingsViewSet(mixins.RetrieveModelMixin,
     queryset = BotSettings.objects.all()
     permission_classes = (IsOwner,)
     lookup_field = 'user__username'
+
+    def get_object(self):
+        key = f'bot_settings_{self.kwargs[self.lookup_field]}'
+        obj = cache.get(key)
+        if not obj:
+            obj = super().get_object()
+            cache.set(key, obj, None)
+        return obj
+
+    def update(self, request, *args, **kwargs):
+        key = f'bot_settings_{self.kwargs[self.lookup_field]}'
+        response = super().update(request, *args, **kwargs)
+        cache.delete(key)
+        return response
 
 
 def oauth(request):

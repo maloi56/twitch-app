@@ -65,6 +65,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'drf_yasg',
+    'silk',
 
     'oauth2_provider',
     'social_django',
@@ -85,6 +86,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
+    'silk.middleware.SilkyMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
 
@@ -229,14 +231,14 @@ REDIS_PORT = env('REDIS_PORT')
 CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}'
 CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}'
 
-# CHANNEL_LAYERS = {
-#     "default": {
-#         "BACKEND": "channels_redis.core.RedisChannelLayer",
-#         "CONFIG": {
-#             "hosts": [(REDIS_HOST, REDIS_PORT)],
-#         },
-#     },
-# }
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
+        },
+    },
+}
 #
 # CHANNEL_LAYERS = {
 #     "default": {
@@ -276,3 +278,5 @@ CACHES = {
 #         },
 #     },
 # }
+
+SILKY_PYTHON_PROFILER = True
