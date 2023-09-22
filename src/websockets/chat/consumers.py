@@ -114,15 +114,14 @@ class RoomConsumer(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
                 start_time=timezone.now(),
             )
         elif not per_task.first().enabled:
-            print('hui')
             per_task = per_task.first()
             per_task.enabled = True
-            print(per_task.enabled)
             per_task.save()
-            print(per_task.enabled)
 
     @database_sync_to_async
     def close_task(self):
-        task = PeriodicTask.objects.get(name=f'update_points {self.channel}')
-        task.enabled = False
-        task.save()
+        task = PeriodicTask.objects.filter(name=f'update_points {self.channel}')
+        if task.exists():
+            task = task.first()
+            task.enabled = False
+            task.save()
