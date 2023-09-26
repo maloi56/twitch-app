@@ -4,7 +4,7 @@ from channels.db import database_sync_to_async
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import (ObserverModelInstanceMixin, action)
 from users.models import Leaderboard, LeaderboardMembers
-from users.serializers import LeaderboardSerializer, LeaderboardMembersSerializer
+from users.serializers import LeaderboardMembersSerializer
 
 
 class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
@@ -20,14 +20,14 @@ class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
 
     @action()
     async def server_close(self, **kwargs):
-        return await self.close()
+        return await self.send_json(content={'Error message': kwargs['message']}, close=True)
 
     @action()
     async def join_room(self, **kwargs):
         if not await self.validate_leaderboard():
-            return await self.send_json(content={'message': 'No such leaderboard'}, close=True)
-        await self.send_json(content={'message': f'Got leaderboard widget'})
+            return await self.server_close(message='No such leaderboard')
 
+        await self.send_json(content={'message': f'Got leaderboard widget'})
         self.schedule = asyncio.create_task(self.run_schedule())
 
     @action()
@@ -38,31 +38,25 @@ class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
         try:
             self.secret = (dict((x.split('=') for x in self.scope['query_string'].decode().split("&")))). \
                 get('secret', None)
-
-            await self.get_leaderboard(self.secret)
-            return True
-        except:
+            return True if await self.get_leaderboard(self.secret) else False
+        except Exception as e:
+            print(e)
             return False
 
-    # async def create_schedule(self):
-    #     interval, created = IntervalSchedule.objects.get_or_create(every=10, period='seconds')
-    #     leaderboard = await self.get_ser_leaderboard()
-    #     PeriodicTask.objects.create(
-    #         name=f'send leaderboard info for {self.secret}',
-    #         task='repeat_order_make',
-    #         interval=interval,
-    #         args=leaderboard,
-    #         start_time=timezone.now(),
-    #     )
     async def run_schedule(self):
         while True:
+            await self.get_leaderboard(self.secret)
             await self.send_message()
             await asyncio.sleep(15)
 
     @database_sync_to_async
     def get_leaderboard(self, secret):
         if self.leaderboard_settings is None:
-            self.leaderboard_settings = Leaderboard.objects.filter(secret=secret).first()
+            try:
+                self.leaderboard_settings = Leaderboard.objects.filter(secret=secret).first()
+            except Exception as e:
+                print(e)
+                return None
 
         self.leaderboard = LeaderboardMembers.objects \
                                .filter(leaderboard=self.leaderboard_settings) \
@@ -71,8 +65,12 @@ class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
                                .exclude(nickname=self.leaderboard_settings.channel.username) \
             [:self.leaderboard_settings.widget_count]
 
-        return self.leaderboard
+        return True
 
     @database_sync_to_async
     def get_ser_leaderboard(self):
-        return LeaderboardMembersSerializer(self.leaderboard, many=True).data
+        try:
+            return LeaderboardMembersSerializer(self.leaderboard, many=True).data
+        except Exception as e:
+            asyncio.run(self.server_close(message=f'Exception inside getting serialized data. {str(e)}'))
+            raise e

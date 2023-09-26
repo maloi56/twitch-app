@@ -8,6 +8,8 @@ from users.models import Leaderboard, BotSettings, LeaderboardMembers
 from users.serializers import LeaderboardSerializer, BotSettingsSerializer, LeaderboardSecretSerializer, \
     LeaderboardMembersSerializer
 
+from users.mixins.custom_mixins import CachedObjectMixin
+
 
 class CustomPagination(PageNumberPagination):
     page_size = 10
@@ -27,30 +29,23 @@ class LeaderBoardMembersModalViewSet(mixins.ListModelMixin, GenericViewSet):
         return queryset.filter(leaderboard__channel__username=channel).order_by('-points').exclude(nickname=channel)
 
 
-class LeaderBoardModalViewSet(mixins.RetrieveModelMixin,
-                              mixins.UpdateModelMixin,
-                              GenericViewSet):
+class LeaderBoardModalViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    GenericViewSet):
     serializer_class = LeaderboardSerializer
     queryset = Leaderboard.objects.all()
     permission_classes = (IsOwner,)
     lookup_field = 'channel__username'
 
-    def get_object(self):
-        key = f'leaderboard_settings_{self.kwargs[self.lookup_field]}'
-        obj = cache.get(key)
-        if not obj:
-            obj = super().get_object()
-            cache.set(key, obj, None)
-        return obj
-
     def update(self, request, *args, **kwargs):
-        key = f'leaderboard_settings_{self.kwargs[self.lookup_field]}'
+        key = f'{self.__class__.__name__}_{self.kwargs[self.lookup_field]}'
         response = super().update(request, *args, **kwargs)
         cache.delete(key)
         return response
 
 
-class LeaderboardSecret(mixins.RetrieveModelMixin, GenericViewSet):
+class LeaderboardSecret(CachedObjectMixin, mixins.RetrieveModelMixin, GenericViewSet):
     serializer_class = LeaderboardSecretSerializer
     queryset = Leaderboard.objects.all()
     permission_classes = (IsOwner,)
@@ -59,11 +54,14 @@ class LeaderboardSecret(mixins.RetrieveModelMixin, GenericViewSet):
     def get_object(self):
         obj = super().get_object()
         if self.request.query_params.get('new', False) == '1' or obj.secret is None:
+            key = f'{self.__class__.__name__}_{self.kwargs[self.lookup_field]}'
             obj.secret = obj.update_secret()
+            cache.set(key, obj, self.ONE_WEEK)
         return obj
 
 
-class BotSettingsViewSet(mixins.RetrieveModelMixin,
+class BotSettingsViewSet(CachedObjectMixin,
+                         mixins.RetrieveModelMixin,
                          mixins.UpdateModelMixin,
                          GenericViewSet):
     serializer_class = BotSettingsSerializer
@@ -71,16 +69,8 @@ class BotSettingsViewSet(mixins.RetrieveModelMixin,
     permission_classes = (IsOwner,)
     lookup_field = 'user__username'
 
-    def get_object(self):
-        key = f'bot_settings_{self.kwargs[self.lookup_field]}'
-        obj = cache.get(key)
-        if not obj:
-            obj = super().get_object()
-            cache.set(key, obj, None)
-        return obj
-
     def update(self, request, *args, **kwargs):
-        key = f'bot_settings_{self.kwargs[self.lookup_field]}'
+        key = f'{self.__class__.__name__}_{self.kwargs[self.lookup_field]}'
         response = super().update(request, *args, **kwargs)
         cache.delete(key)
         return response
