@@ -91,6 +91,9 @@ class Leaderboard(models.Model):
     points_name = models.CharField(verbose_name='Название для поинтов', default='points', max_length=32,
                                    help_text='Альтернативное название для поинтов')
 
+    active = models.BooleanField(verbose_name='Выключатель', default=True,
+                                 help_text='Включение/выключение лидерборда на виджете')
+
     secret = models.UUIDField(verbose_name='Секретный ключ', unique=True, null=True, blank=True,
                               help_text='Секретный ключ для WS')
 

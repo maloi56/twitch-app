@@ -30,6 +30,7 @@ class LeaderBoardMembersModalViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class LeaderBoardModalViewSet(
+    CachedObjectMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     GenericViewSet):

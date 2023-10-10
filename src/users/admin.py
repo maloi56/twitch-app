@@ -27,5 +27,5 @@ class LeaderboardMembersAdmin(admin.ModelAdmin):
 @admin.register(Leaderboard)
 class LeaderboardAdmin(admin.ModelAdmin):
     list_display = ('id', 'channel',)
-    fields = ('secret', 'points_per_msg', 'widget_count', 'points_name')
+    fields = ('secret', 'points_per_msg', 'widget_count', 'points_name', 'active')
     # inlines = (LeaderboardMembersInline,)
