@@ -2,7 +2,9 @@ import asyncio
 
 from channels.db import database_sync_to_async
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
-from djangochannelsrestframework.observer.generics import (ObserverModelInstanceMixin, action)
+from djangochannelsrestframework.observer.generics import (
+    ObserverModelInstanceMixin, action)
+
 from users.models import Leaderboard, LeaderboardMembers
 from users.serializers import LeaderboardMembersSerializer
 
@@ -27,7 +29,7 @@ class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
         if not await self.validate_leaderboard():
             return await self.server_close(message='No such leaderboard')
 
-        await self.send_json(content={'message': f'Got leaderboard widget'})
+        await self.send_json(content={'message': 'Got leaderboard widget'})
         self.schedule = asyncio.create_task(self.run_schedule())
 
     @action()
@@ -58,12 +60,13 @@ class Widget(ObserverModelInstanceMixin, GenericAsyncAPIConsumer):
                 print(e)
                 return None
 
-        self.leaderboard = LeaderboardMembers.objects \
-                               .filter(leaderboard=self.leaderboard_settings) \
-                               .order_by('-points') \
-                               .all() \
-                               .exclude(nickname=self.leaderboard_settings.channel.username) \
+        self.leaderboard = (
+            LeaderboardMembers.objects
+            .filter(leaderboard=self.leaderboard_settings)
+            .order_by('-points')
+            .all().exclude(nickname=self.leaderboard_settings.channel.username)
             [:self.leaderboard_settings.widget_count]
+        )
 
         return True
 

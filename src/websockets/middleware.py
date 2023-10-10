@@ -1,17 +1,15 @@
 import os
+
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'twitch.settings')
 django.setup()
 
-from django.utils.timezone import now
-from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
 from channels.middleware import BaseMiddleware
-
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AnonymousUser, User
 from django.db import close_old_connections
-
+from django.utils.timezone import now
 from oauth2_provider.models import AccessToken
 
 ALGORITHM = "HS256"
@@ -24,8 +22,8 @@ def get_user(token):
         if payload is None:
             return AnonymousUser()
         print('payload', payload)
-    except:
-        print('no payload')
+    except Exception as e:
+        print('no payload' + e)
         return AnonymousUser()
 
     token_exp = payload.expires

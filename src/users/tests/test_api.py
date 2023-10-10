@@ -1,16 +1,17 @@
-import redis
-
 from datetime import timedelta
 from http import HTTPStatus
 
-from django.urls import reverse_lazy
-from rest_framework.test import APITestCase
-from django.utils.timezone import now
+import redis
 from django.conf import settings
-
-from users.models import User, Leaderboard, BotSettings, LeaderboardMembers
+from django.urls import reverse_lazy
+from django.utils.timezone import now
 from oauth2_provider.models import AccessToken
-from users.serializers import LeaderboardSerializer, BotSettingsSerializer, LeaderboardSecretSerializer
+from rest_framework.test import APITestCase
+
+from users.models import BotSettings, Leaderboard, User
+from users.serializers import (BotSettingsSerializer,
+                               LeaderboardSecretSerializer,
+                               LeaderboardSerializer)
 
 r = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=1)
 
@@ -73,7 +74,6 @@ class UsersApiTestCase(APITestCase):
     def test_update_leaderboard(self):
         self.clear_cache()
 
-
         url = reverse_lazy('leaderboardmembers-list') + f'?channel={self.user.username}'
         data = {'channel': {
             'username': 'newnick'}
@@ -88,7 +88,6 @@ class UsersApiTestCase(APITestCase):
 
     def test_get_settings(self):
         self.clear_cache()
-
 
         self.settings = BotSettings.objects.get(user=self.user)
         serializer_settings = BotSettingsSerializer(self.settings).data

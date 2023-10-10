@@ -1,10 +1,10 @@
-import redis
 import logging
 
+import redis
 from celery import shared_task
 from django.conf import settings
 
-from users.models import LeaderboardMembers, Leaderboard
+from users.models import Leaderboard, LeaderboardMembers
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,8 @@ def update_points(channel):
         leaderboard = Leaderboard.objects.get(channel__username=channel)
         viewers = dict([(k.decode('utf-8'), int(v)) for k, v in redis_client.hgetall(channel).items()])
         if len(viewers) > 0:
-            objects_to_insert = [LeaderboardMembers(leaderboard=leaderboard, nickname=nickname) for nickname in list(viewers)]
+            objects_to_insert = \
+                [LeaderboardMembers(leaderboard=leaderboard, nickname=nickname) for nickname in list(viewers)]
             LeaderboardMembers.objects.bulk_create(objects_to_insert, ignore_conflicts=True)
             obj_to_update = list(LeaderboardMembers.objects.filter(leaderboard=leaderboard, nickname__in=list(viewers)))
             for obj in obj_to_update:

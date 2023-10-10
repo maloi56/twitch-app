@@ -2,7 +2,6 @@ import os
 import time
 
 from celery import Celery
-# from websockets.chat import tasks
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'twitch.settings')
 

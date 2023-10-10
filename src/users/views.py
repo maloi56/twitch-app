@@ -1,14 +1,17 @@
 from django.core.cache import cache
 from django.shortcuts import render
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from users.permissions import IsOwner
-from rest_framework import generics, mixins
+from rest_framework.mixins import (ListModelMixin, RetrieveModelMixin,
+                                   UpdateModelMixin)
 from rest_framework.pagination import PageNumberPagination
-from users.models import Leaderboard, BotSettings, LeaderboardMembers
-from users.serializers import LeaderboardSerializer, BotSettingsSerializer, LeaderboardSecretSerializer, \
-    LeaderboardMembersSerializer
+from rest_framework.viewsets import GenericViewSet
 
 from users.mixins.custom_mixins import CachedObjectMixin
+from users.models import BotSettings, Leaderboard, LeaderboardMembers
+from users.permissions import IsOwner
+from users.serializers import (BotSettingsSerializer,
+                               LeaderboardMembersSerializer,
+                               LeaderboardSecretSerializer,
+                               LeaderboardSerializer)
 
 
 class CustomPagination(PageNumberPagination):
@@ -17,7 +20,7 @@ class CustomPagination(PageNumberPagination):
     max_page_size = 1000
 
 
-class LeaderBoardMembersModalViewSet(mixins.ListModelMixin, GenericViewSet):
+class LeaderBoardMembersModalViewSet(ListModelMixin, GenericViewSet):
     serializer_class = LeaderboardMembersSerializer
     queryset = LeaderboardMembers.objects.all()
     permission_classes = (IsOwner,)
@@ -29,11 +32,8 @@ class LeaderBoardMembersModalViewSet(mixins.ListModelMixin, GenericViewSet):
         return queryset.filter(leaderboard__channel__username=channel).order_by('-points').exclude(nickname=channel)
 
 
-class LeaderBoardModalViewSet(
-    CachedObjectMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    GenericViewSet):
+class LeaderBoardModalViewSet(CachedObjectMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
+
     serializer_class = LeaderboardSerializer
     queryset = Leaderboard.objects.all()
     permission_classes = (IsOwner,)
@@ -46,7 +46,7 @@ class LeaderBoardModalViewSet(
         return response
 
 
-class LeaderboardSecret(CachedObjectMixin, mixins.RetrieveModelMixin, GenericViewSet):
+class LeaderboardSecret(CachedObjectMixin, RetrieveModelMixin, GenericViewSet):
     serializer_class = LeaderboardSecretSerializer
     queryset = Leaderboard.objects.all()
     permission_classes = (IsOwner,)
@@ -61,10 +61,7 @@ class LeaderboardSecret(CachedObjectMixin, mixins.RetrieveModelMixin, GenericVie
         return obj
 
 
-class BotSettingsViewSet(CachedObjectMixin,
-                         mixins.RetrieveModelMixin,
-                         mixins.UpdateModelMixin,
-                         GenericViewSet):
+class BotSettingsViewSet(CachedObjectMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
     serializer_class = BotSettingsSerializer
     queryset = BotSettings.objects.all()
     permission_classes = (IsOwner,)

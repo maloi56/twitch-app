@@ -1,9 +1,9 @@
 import json
-from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField
 
+from rest_framework import serializers
 from social_django.models import UserSocialAuth
-from users.models import Leaderboard, User, BotSettings, LeaderboardMembers
+
+from users.models import BotSettings, Leaderboard, LeaderboardMembers, User
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -1,17 +1,18 @@
 import asyncio
 import json
-import redis
 
+import redis
 from channels.db import database_sync_to_async
+from django.conf import settings
 from django.core.cache import cache
 from django.utils import timezone
-from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from djangochannelsrestframework.generics import GenericAsyncAPIConsumer
 from djangochannelsrestframework.observer.generics import action
-from django.conf import settings
 from social_django.models import UserSocialAuth
-from users.models import BotSettings, Leaderboard, LeaderboardMembers
+
 from twitch_bot.main import Bot
+from users.models import BotSettings, Leaderboard, LeaderboardMembers
 from users.serializers import LeaderboardMembersSerializer
 
 redis_client = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT, db=2)
@@ -24,7 +25,7 @@ class RoomConsumer(GenericAsyncAPIConsumer):
     settings = None
     leaderboard = None
     leaderboard_members = None
-    schedule_leaderboard= None
+    schedule_leaderboard = None
 
     __GREETING_MESSAGE = 'Successful connect to chat bot, Danya'
 
@@ -140,10 +141,10 @@ class RoomConsumer(GenericAsyncAPIConsumer):
     @database_sync_to_async
     def get_leaderboard_members(self):
         self.leaderboard_members = LeaderboardMembers.objects \
-                               .filter(leaderboard=self.leaderboard) \
-                               .order_by('-points') \
-                               .all() \
-                               .exclude(nickname=self.channel) \
+                                       .filter(leaderboard=self.leaderboard) \
+                                       .order_by('-points') \
+                                       .all() \
+                                       .exclude(nickname=self.channel) \
             [:self.leaderboard.widget_count]
 
         return True
@@ -168,8 +169,6 @@ class RoomConsumer(GenericAsyncAPIConsumer):
 
     @action()
     async def join_room(self, **kwargs):
-        # if not await self.validate_user():
-        #     return await self.server_close(message='Access token is not valid. Connection has closed')
 
         if await self.init_data() and await self.init_celery_task():
             await self.init_bot()

@@ -10,8 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-import environ
 from pathlib import Path
+
+import environ
 
 env = environ.Env(
     DEBUG=(bool),
@@ -206,18 +207,17 @@ REST_FRAMEWORK = {
     ),
 }
 
-#ASGI 
+# ASGI
 
 ASGI_APPLICATION = "twitch.asgi.application"
-
 
 # CORS
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
-CORS_ALLOW_ALL_ORIGINS=True
-SECURE_CROSS_ORIGIN_OPENER_POLICY=None
+CORS_ALLOW_ALL_ORIGINS = True
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 # CSRF
 
